@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Sample {{ sample.sample_id }}</h2>
+  <p>Type: {{ sample.sample_type }}</p>
+  <p>Project: {{ sample.project_name }} | Client: {{ sample.client_name }} | Collected: {{ sample.date_collected }}</p>
+
+  <h3>Tests</h3>
+  <form method="post">
+    <label>Test name: <select name="test_name">
+      <option>Compressive Strength</option>
+      <option>Sieve Analysis</option>
+      <option>Atterberg Limits</option>
+    </select></label><br>
+    <label>Raw values (enter simple format): <input type="text" name="raw_value"></label><br>
+    <button type="submit">Add Test</button>
+  </form>
+
+  <table>
+    <tr><th>ID</th><th>Test</th><th>Raw</th><th>Result</th><th>Actions</th></tr>
+    {% for t in sample.tests %}
+      <tr>
+        <td>{{ t.id }}</td>
+        <td>{{ t.test_name }}</td>
+        <td>{{ t.raw_values }}</td>
+        <td>{{ t.calculated_result }}</td>
+        <td>
+          {% if t.test_name == 'Compressive Strength' %}
+            <a href="/calculate/compressive/{{t.id}}">Calculate</a>
+          {% elif t.test_name == 'Sieve Analysis' %}
+            <a href="/calculate/sieve/{{t.id}}">Calculate</a>
+          {% endif %}
+          | <a href="/reports/generate/{{t.id}}">Generate Report</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}

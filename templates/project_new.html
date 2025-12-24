@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class='container-fluid'>
+  <div class='row'>
+    <div class='col-lg-8 mx-auto'>
+      <div class='card'>
+        <div class='card-header'>
+          <h5 class='mb-0'><i class='bi bi-plus-circle'></i> Create New Project</h5>
+        </div>
+        <div class='card-body'>
+          <form method='post' novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class='row'>
+              <div class='col-md-6 mb-3'>
+                <label for='project_code' class='form-label'>
+                  <i class='bi bi-code-square'></i> Project Code <span class='text-danger'>*</span>
+                </label>
+                <input type='text' class='form-control' id='project_code' name='project_code' required 
+                       placeholder='e.g., PROJ001' maxlength='20'>
+                <small class='text-muted'>Unique identifier for the project</small>
+              </div>
+              
+              <div class='col-md-6 mb-3'>
+                <label for='project_name' class='form-label'>
+                  <i class='bi bi-bookmark'></i> Project Name <span class='text-danger'>*</span>
+                </label>
+                <input type='text' class='form-control' id='project_name' name='project_name' required 
+                       placeholder='e.g., Highway Bridge Project'>
+              </div>
+            </div>
+
+            <div class='mb-3'>
+              <label for='client_name' class='form-label'>
+                <i class='bi bi-person-badge'></i> Client Name
+              </label>
+              <input type='text' class='form-control' id='client_name' name='client_name' 
+                     placeholder='e.g., ABC Construction Ltd.'>
+            </div>
+
+            <div class='mb-3'>
+              <label for='description' class='form-label'>
+                <i class='bi bi-file-text'></i> Description
+              </label>
+              <textarea class='form-control' id='description' name='description' rows='4' 
+                        placeholder='Project details and notes...'></textarea>
+            </div>
+
+            <div class='d-flex gap-2'>
+              <button type='submit' class='btn btn-primary'>
+                <i class='bi bi-check-circle'></i> Create Project
+              </button>
+              <a href='/projects' class='btn btn-secondary'>
+                <i class='bi bi-x-circle'></i> Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

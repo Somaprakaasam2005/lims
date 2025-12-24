@@ -1,0 +1,89 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<div class='container-fluid'>
+  <div class='row'>
+    <div class='col-lg-8 mx-auto'>
+      <div class='card'>
+        <div class='card-header'>
+          <h5 class='mb-0'><i class='bi bi-plus-circle'></i> Register New Sample</h5>
+        </div>
+        <div class='card-body'>
+          <form method='post' novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class='row'>
+              <div class='col-md-6 mb-3'>
+                <label for='sample_id' class='form-label'>
+                  <i class='bi bi-barcode'></i> Sample ID <span class='text-danger'>*</span>
+                </label>
+                <input type='text' class='form-control' id='sample_id' name='sample_id' required 
+                       placeholder='e.g., SAM-2025-001'>
+                <small class='text-muted'>Unique identifier</small>
+              </div>
+              
+              <div class='col-md-6 mb-3'>
+                <label for='sample_type' class='form-label'>
+                  <i class='bi bi-tag'></i> Sample Type <span class='text-danger'>*</span>
+                </label>
+                <select class='form-select' id='sample_type' name='sample_type' required>
+                  <option value=''>-- Select Type --</option>
+                  <option value='Concrete'>Concrete</option>
+                  <option value='Soil'>Soil</option>
+                  <option value='Aggregate'>Aggregate</option>
+                </select>
+              </div>
+            </div>
+
+            <div class='mb-3'>
+              <label for='project_id' class='form-label'>
+                <i class='bi bi-folder'></i> Select Project (Optional)
+              </label>
+              <select class='form-select' id='project_id' name='project_id'>
+                <option value=''>-- No Project Selected --</option>
+                {% for p in projects %}
+                  <option value='{{p.id}}'>{{ p.project_code }} - {{ p.project_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class='mb-3'>
+              <label for='project_name' class='form-label'>
+                <i class='bi bi-pencil'></i> Or Enter Project Name
+              </label>
+              <input type='text' class='form-control' id='project_name' name='project_name' 
+                     placeholder='If project not in list above'>
+              <small class='text-muted'>Use this if your project is not listed</small>
+            </div>
+
+            <div class='row'>
+              <div class='col-md-6 mb-3'>
+                <label for='client_name' class='form-label'>
+                  <i class='bi bi-person-badge'></i> Client Name
+                </label>
+                <input type='text' class='form-control' id='client_name' name='client_name' 
+                       placeholder='Client name'>
+              </div>
+
+              <div class='col-md-6 mb-3'>
+                <label for='date_collected' class='form-label'>
+                  <i class='bi bi-calendar'></i> Date Collected
+                </label>
+                <input type='date' class='form-control' id='date_collected' name='date_collected'>
+              </div>
+            </div>
+
+            <div class='d-flex gap-2'>
+              <button type='submit' class='btn btn-primary'>
+                <i class='bi bi-check-circle'></i> Register Sample
+              </button>
+              <a href='/samples' class='btn btn-secondary'>
+                <i class='bi bi-x-circle'></i> Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

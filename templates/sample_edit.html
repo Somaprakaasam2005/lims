@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Edit Sample</h2>
+  <form method='post'>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <label>Sample ID: <input type='text' name='sample_id' value='{{ sample.sample_id }}' required></label><br>
+    <label>Sample Type:
+      <select name='sample_type' required>
+        <option value='Concrete' {% if sample.sample_type == 'Concrete' %}selected{% endif %}>Concrete</option>
+        <option value='Soil' {% if sample.sample_type == 'Soil' %}selected{% endif %}>Soil</option>
+        <option value='Aggregate' {% if sample.sample_type == 'Aggregate' %}selected{% endif %}>Aggregate</option>
+      </select>
+    </label><br>
+    <label>Project Name: <input type='text' name='project_name' value='{{ sample.project_name }}'></label><br>
+    <label>Client Name: <input type='text' name='client_name' value='{{ sample.client_name }}'></label><br>
+    <label>Date Collected: <input type='date' name='date_collected' value='{{ sample.date_collected }}'></label><br>
+    <button type='submit'>Update Sample</button>
+    <a href='/samples/{{ sample.id }}'>Cancel</a>
+  </form>
+{% endblock %}

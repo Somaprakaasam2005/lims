@@ -1,0 +1,182 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<div class='container-fluid'>
+  <div class='row mb-4'>
+    <div class='col-12'>
+      <h1><i class='bi bi-speedometer2'></i> Dashboard</h1>
+      <p class='text-muted'>Welcome <strong>{{ user.username }}</strong> | Role: <strong>{{ user.role }}</strong></p>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class='row mb-4'>
+    <div class='col-md-6 col-lg-3 mb-3'>
+      <div class='card text-white bg-primary'>
+        <div class='card-body'>
+          <div class='d-flex align-items-center'>
+            <div class='flex-grow-1'>
+              <h6 class='card-title mb-0'>Total Projects</h6>
+              <h2 class='mb-0'>{{ total_projects }}</h2>
+            </div>
+            <i class='bi bi-folder' style='font-size: 2rem; opacity: 0.7;'></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class='col-md-6 col-lg-3 mb-3'>
+      <div class='card text-white bg-info'>
+        <div class='card-body'>
+          <div class='d-flex align-items-center'>
+            <div class='flex-grow-1'>
+              <h6 class='card-title mb-0'>Total Samples</h6>
+              <h2 class='mb-0'>{{ total_samples }}</h2>
+            </div>
+            <i class='bi bi-vial' style='font-size: 2rem; opacity: 0.7;'></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class='col-md-6 col-lg-3 mb-3'>
+      <div class='card text-white bg-success'>
+        <div class='card-body'>
+          <div class='d-flex align-items-center'>
+            <div class='flex-grow-1'>
+              <h6 class='card-title mb-0'>Total Tests</h6>
+              <h2 class='mb-0'>{{ total_tests }}</h2>
+            </div>
+            <i class='bi bi-clipboard-check' style='font-size: 2rem; opacity: 0.7;'></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class='col-md-6 col-lg-3 mb-3'>
+      <div class='card text-dark bg-warning'>
+        <div class='card-body'>
+          <div class='d-flex align-items-center'>
+            <div class='flex-grow-1'>
+              <h6 class='card-title mb-0'>Pending Tests</h6>
+              <h2 class='mb-0'>{{ pending_tests }}</h2>
+            </div>
+            <i class='bi bi-clock' style='font-size: 2rem; opacity: 0.7;'></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Samples Section -->
+  <div class='row'>
+    <div class='col-12'>
+      <div class='card'>
+        <div class='card-header'>
+          <i class='bi bi-clock-history'></i> Recent Samples
+        </div>
+        <div class='card-body'>
+          {% if recent_samples %}
+            <div class='table-responsive'>
+              <table class='table table-hover'>
+                <thead>
+                  <tr>
+                    <th>Sample ID</th>
+                    <th>Type</th>
+                    <th>Project</th>
+                    <th>Date Collected</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for s in recent_samples %}
+                    <tr>
+                      <td><strong>{{ s.sample_id }}</strong></td>
+                      <td>
+                        <span class='badge bg-secondary'>{{ s.sample_type }}</span>
+                      </td>
+                      <td>
+                        {% if s.project %}
+                          <a href='/projects/{{s.project.id}}' class='text-decoration-none'>{{ s.project.project_name }}</a>
+                        {% else %}
+                          {{ s.project_name or 'N/A' }}
+                        {% endif %}
+                      </td>
+                      <td>{{ s.date_collected }}</td>
+                      <td><span class='status-active'>Active</span></td>
+                      <td>
+                        <a href='/samples/{{s.id}}' class='btn btn-sm btn-outline-primary'>
+                          <i class='bi bi-eye'></i> View
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class='text-muted'>No samples yet. <a href='/samples/new'>Register a sample</a></p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Approval Section -->
+  {% if user.role in ['Admin', 'Engineer'] and pending_approval %}
+    <div class='row mt-4'>
+      <div class='col-12'>
+        <div class='card'>
+          <div class='card-header'>
+            <i class='bi bi-exclamation-circle'></i> Tests Pending Approval
+          </div>
+          <div class='card-body'>
+            <div class='table-responsive'>
+              <table class='table table-hover'>
+                <thead>
+                  <tr>
+                    <th>Test ID</th>
+                    <th>Sample</th>
+                    <th>Test Name</th>
+                    <th>Result</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for t in pending_approval %}
+                    <tr>
+                      <td><strong>#{{ t.id }}</strong></td>
+                      <td><a href='/samples/{{t.sample.id}}'>{{ t.sample.sample_id }}</a></td>
+                      <td>{{ t.test_name }}</td>
+                      <td><code>{{ t.calculated_result or 'Pending' }}</code></td>
+                      <td>
+                        <a href='/samples/{{t.sample.id}}' class='btn btn-sm btn-outline-warning'>
+                          <i class='bi bi-pencil'></i> Review
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Quick Links -->
+  <div class='row mt-4'>
+    <div class='col-12'>
+      <div class='card bg-light'>
+        <div class='card-body'>
+          <h5><i class='bi bi-link-45deg'></i> Quick Links</h5>
+          <a href='/projects' class='btn btn-outline-primary me-2'><i class='bi bi-folder'></i> View Projects</a>
+          <a href='/samples' class='btn btn-outline-info me-2'><i class='bi bi-vial'></i> View Samples</a>
+          <a href='/samples/new' class='btn btn-outline-success'><i class='bi bi-plus-circle'></i> Register New Sample</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

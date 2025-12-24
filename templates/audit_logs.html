@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<h1>Audit Logs</h1>
+
+<div class="audit-filters">
+    <form method="get" class="filter-form">
+        <input type="text" name="user" placeholder="Filter by user" value="{{ request.args.get('user', '') }}">
+        <input type="text" name="action" placeholder="Filter by action" value="{{ request.args.get('action', '') }}">
+        <input type="text" name="entity_type" placeholder="Filter by entity" value="{{ request.args.get('entity_type', '') }}">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{{ url_for('audit_logs') }}" class="btn btn-secondary">Clear</a>
+    </form>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Entity Type</th>
+            <th>Entity ID</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ log.user.username }}</td>
+            <td><span class="action-badge action-{{ log.action.lower() }}">{{ log.action }}</span></td>
+            <td>{{ log.entity_type }}</td>
+            <td>{{ log.entity_id }}</td>
+            <td>{{ log.details or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<style>
+.audit-filters {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.filter-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-form input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    flex: 1;
+    min-width: 150px;
+}
+
+.action-badge {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.action-created {
+    background: #d4edda;
+    color: #155724;
+}
+
+.action-updated {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.action-deleted {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.action-approved, .action-login {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+</style>
+{% endblock %}

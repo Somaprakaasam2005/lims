@@ -1,0 +1,103 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<div class='container-fluid'>
+  <div class='row mb-4 align-items-center'>
+    <div class='col'>
+      <h1><i class='bi bi-vial'></i> Samples</h1>
+    </div>
+    <div class='col-auto'>
+      <a href='/samples/new' class='btn btn-primary'>
+        <i class='bi bi-plus-circle'></i> Register Sample
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter Card -->
+  <div class='card mb-4'>
+    <div class='card-header'>
+      <i class='bi bi-funnel'></i> Filter & Search
+    </div>
+    <div class='card-body'>
+      <form method='get' class='row g-3'>
+        <div class='col-md-4'>
+          <input type='text' name='search' class='form-control' placeholder='Search Sample ID' value='{{ search }}'>
+        </div>
+        <div class='col-md-3'>
+          <input type='text' name='project' class='form-control' placeholder='Project name' value='{{ project_filter }}'>
+        </div>
+        <div class='col-md-3'>
+          <select name='type' class='form-select'>
+            <option value=''>All Types</option>
+            <option value='Concrete' {% if type_filter == 'Concrete' %}selected{% endif %}>Concrete</option>
+            <option value='Soil' {% if type_filter == 'Soil' %}selected{% endif %}>Soil</option>
+            <option value='Aggregate' {% if type_filter == 'Aggregate' %}selected{% endif %}>Aggregate</option>
+          </select>
+        </div>
+        <div class='col-md-2'>
+          <button type='submit' class='btn btn-primary w-100'>
+            <i class='bi bi-search'></i> Filter
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Samples Table -->
+  {% if samples %}
+    <div class='table-responsive'>
+      <table class='table table-hover table-striped'>
+        <thead>
+          <tr>
+            <th>Sample ID</th>
+            <th>Type</th>
+            <th>Project</th>
+            <th>Client</th>
+            <th>Tests</th>
+            <th style='width: 200px;'>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in samples %}
+            <tr>
+              <td><strong>{{ s.sample_id }}</strong></td>
+              <td>
+                <span class='badge bg-secondary'>{{ s.sample_type }}</span>
+              </td>
+              <td>
+                {% if s.project %}
+                  <a href='/projects/{{s.project.id}}' class='text-decoration-none'>{{ s.project.project_name }}</a>
+                {% else %}
+                  {{ s.project_name or '—' }}
+                {% endif %}
+              </td>
+              <td>{{ s.client_name or '—' }}</td>
+              <td>
+                <span class='badge bg-info'>{{ s.tests|length }}</span>
+              </td>
+              <td>
+                <a href='/samples/{{s.id}}' class='btn btn-sm btn-outline-primary' title='View'>
+                  <i class='bi bi-eye'></i>
+                </a>
+                <a href='/samples/{{s.id}}/edit' class='btn btn-sm btn-outline-warning' title='Edit'>
+                  <i class='bi bi-pencil'></i>
+                </a>
+                <form method='post' action='/samples/{{s.id}}/delete' style='display:inline;' onsubmit='return confirm("Are you sure? This will delete all associated tests.")'>
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <button type='submit' class='btn btn-sm btn-outline-danger' title='Delete'>
+                    <i class='bi bi-trash'></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class='alert alert-info'>
+      <i class='bi bi-info-circle'></i> No samples found.
+      <a href='/samples/new' class='alert-link'>Register a new sample</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Edit User</h2>
+  <form method='post'>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <label>Username: <input name='username' value='{{ user.username }}'></label><br>
+    <label>New password (leave blank to keep): <input name='password' type='password'></label><br>
+    <label>Role: <select name='role'>
+      <option {% if user.role=='Admin' %}selected{% endif %}>Admin</option>
+      <option {% if user.role=='Lab Technician' %}selected{% endif %}>Lab Technician</option>
+      <option {% if user.role=='Engineer' %}selected{% endif %}>Engineer</option>
+    </select></label><br>
+    <button type='submit'>Update</button>
+  </form>
+  <form method='post' action='{{ url_for('user_delete', user_id=user.id) }}' onsubmit="return confirm('Delete this user?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <button type='submit'>Delete User</button>
+  </form>
+{% endblock %}

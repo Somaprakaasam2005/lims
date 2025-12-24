@@ -1,0 +1,10 @@
+/* Simple styles for LIMS demo */
+body { font-family: Arial, sans-serif; margin: 16px; }
+nav { margin-bottom: 12px; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+table, th, td { border: 1px solid #ccc; }
+th, td { padding: 8px; text-align: left; }
+.flashes { list-style: none; padding: 0; }
+.flashes li { margin: 4px 0; padding: 6px; border-radius: 4px; }
+.flashes li.success { background: #e6ffed; border: 1px solid #a6f0b3; }
+.flashes li.danger { background: #ffecec; border: 1px solid #f5a6a6; }

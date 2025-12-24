@@ -1,0 +1,123 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+  <h2>Sample {{ sample.sample_id }}</h2>
+  <p>Type: {{ sample.sample_type }}</p>
+  <p>Project: 
+    {% if sample.project %}
+      <a href='/projects/{{sample.project.id}}'>{{ sample.project.project_name }}</a>
+    {% else %}
+      {{ sample.project_name or 'N/A' }}
+    {% endif %}
+  </p>
+  <p>Client: {{ sample.client_name }} | Collected: {{ sample.date_collected }}</p>
+
+  <h3>Tests</h3>
+  <form method='post'>
+    <label>Test name: <select name='test_name'>
+      <optgroup label="Concrete Tests">
+        <option>Compressive Strength</option>
+        <option>Flexural Strength</option>
+        <option>Split Tensile Strength</option>
+        <option>Water Absorption</option>
+      </optgroup>
+      <optgroup label="Soil Tests">
+        <option>Atterberg Limits</option>
+        <option>CBR Test</option>
+        <option>Proctor Compaction</option>
+      </optgroup>
+      <optgroup label="Aggregate Tests">
+        <option>Sieve Analysis</option>
+      </optgroup>
+    </select></label><br>
+    <label>Raw values (enter simple format): <input type='text' name='raw_value' size='50' placeholder='See format hints below'></label><br>
+    <small>
+      <strong>Format hints:</strong><br>
+      • Compressive: load_kN,area_mm2 (e.g., 250,19600)<br>
+      • Flexural: load_kN,length_mm,width_mm,depth_mm (e.g., 45,500,150,150)<br>
+      • Split Tensile: load_kN,length_mm,diameter_mm (e.g., 120,300,150)<br>
+      • Water Absorption: dry_mass_g,saturated_mass_g (e.g., 2000,2100)<br>
+      • Atterberg: LL,PL (e.g., 45,20)<br>
+      • CBR: load_kN,standard_load_kN (e.g., 10.5,13.24)<br>
+      • Proctor: dry_density_kgm3,water_content_% (e.g., 1850,12.5)<br>
+      • Sieve: 75:10;37.5:20;19:30;total:95
+    </small><br>
+    <button type='submit'>Add Test</button>
+  </form>
+
+<h3>All Tests</h3>
+{% if sample.test_results %}
+<form method="post" action="{{ url_for('generate_batch_report') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+  <button type="submit" class="btn-primary" style="margin-bottom:10px; padding:8px 15px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer;">Generate Batch Report for Selected</button>
+  <table>
+    <tr>
+      <th><input type="checkbox" id="select-all" onclick="toggleAll(this)"></th>
+      <th>ID</th><th>Test</th><th>Raw</th><th>Result</th><th>Status</th><th>Actions</th>
+    </tr>
+    {% for t in sample.tests %}
+      <tr>
+        <td><input type="checkbox" name="test_ids" value="{{ t.id }}" class="test-checkbox"></td>
+        <td>{{ t.id }}</td>
+        <td>{{ t.test_name }}</td>
+        <td>{{ t.raw_values }}</td>
+        <td>{{ t.calculated_result }}</td>
+        <td>
+          <span class='status-{{t.status.lower()}}'>{{ t.status or 'Pending' }}</span>
+          {% if t.approved_by %}
+            <br><small>by {{ t.approver.username if t.approver else 'N/A' }}</small>
+          {% endif %}
+        </td>
+        <td>
+          {% if t.test_name == 'Compressive Strength' %}
+            <a href='/calculate/compressive/{{t.id}}'>Calculate</a> |
+          {% elif t.test_name == 'Flexural Strength' %}
+            <a href='/calculate/flexural/{{t.id}}'>Calculate</a> |
+          {% elif t.test_name == 'Split Tensile Strength' %}
+            <a href='/calculate/split_tensile/{{t.id}}'>Calculate</a> |
+          {% elif t.test_name == 'Water Absorption' %}
+            <a href='/calculate/water_absorption/{{t.id}}'>Calculate</a> |
+          {% elif t.test_name == 'Sieve Analysis' %}
+            <a href='/calculate/sieve/{{t.id}}'>Calculate</a> |
+          {% elif t.test_name == 'Atterberg Limits' %}
+            <a href='/calculate/atterberg/{{t.id}}'>Calculate</a> |
+          {% elif t.test_name == 'CBR Test' %}
+            <a href='/calculate/cbr/{{t.id}}'>Calculate</a> |
+          {% elif t.test_name == 'Proctor Compaction' %}
+            <a href='/calculate/proctor/{{t.id}}'>Calculate</a> |
+          {% endif %}
+          <a href='/reports/generate/{{t.id}}'>Report</a>
+          
+          {% if current_user.role in ['Admin', 'Engineer'] and t.status != 'Approved' %}
+            <br>
+            <form method='post' action='/test/{{t.id}}/approve' style='display:inline'>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type='text' name='remarks' placeholder='Remarks (optional)' size='20'>
+              <button type='submit' style='color:green'>Approve</button>
+            </form>
+            <form method='post' action='/test/{{t.id}}/reject' style='display:inline'>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type='text' name='remarks' placeholder='Reason *' size='20' required>
+              <button type='submit' style='color:red'>Reject</button>
+            </form>
+          {% endif %}
+          
+          {% if t.remarks %}
+            <br><small><strong>Remarks:</strong> {{ t.remarks }}</small>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+</form>
+
+<script>
+function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.test-checkbox');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+}
+</script>
+
+{% else %}
+  <p>No tests for this sample yet.</p>
+{% endif %}
+{% endblock %}
