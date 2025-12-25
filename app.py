@@ -620,19 +620,27 @@ def generate_report(test_id):
 
     # Render HTML and try converting with WeasyPrint; fallback to existing ReportLab generator
     html = render_template('report_cube.html', **context)
+    used_html_pdf = None
+    # First try WeasyPrint (preferred) -> pdfkit (wkhtmltopdf) -> fallback to ReportLab
     try:
         from weasyprint import HTML
         HTML(string=html, base_url=request.base_url).write_pdf(out_path)
-        used_html_pdf = True
+        used_html_pdf = 'weasyprint'
     except Exception:
-        # Fallback to old PDF generator
         try:
-            generate_test_report_pdf(out_path, lab_name=lab_name, sample=sample, test_name=tr.test_name,
-                                     raw_values=tr.raw_values, result=tr.calculated_result, technician=current_user.username)
-            used_html_pdf = False
-        except Exception as e:
-            flash(f'Failed to generate report: {e}', 'danger')
-            return redirect(url_for('sample_detail', sample_id=sample.id))
+            import pdfkit
+            # pdfkit requires wkhtmltopdf binary available in PATH
+            pdfkit.from_string(html, out_path)
+            used_html_pdf = 'pdfkit'
+        except Exception:
+            # Fallback to old PDF generator (ReportLab)
+            try:
+                generate_test_report_pdf(out_path, lab_name=lab_name, sample=sample, test_name=tr.test_name,
+                                         raw_values=tr.raw_values, result=tr.calculated_result, technician=current_user.username)
+                used_html_pdf = 'reportlab'
+            except Exception as e:
+                flash(f'Failed to generate report: {e}', 'danger')
+                return redirect(url_for('sample_detail', sample_id=sample.id))
 
     # Save a record
     rpt = models.Report(sample_id=sample.id, test_result_id=tr.id, file_path=out_path, created_at=datetime.utcnow())
