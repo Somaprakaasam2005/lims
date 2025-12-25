@@ -557,18 +557,150 @@ def generate_report(test_id):
     lab_name = 'Civil Engg Materials Lab - College'
     out_path = f"reports/report_{tr.id}.pdf"
     os.makedirs('reports', exist_ok=True)
-    generate_test_report_pdf(out_path, lab_name=lab_name, sample=sample, test_name=tr.test_name,
-                             raw_values=tr.raw_values, result=tr.calculated_result, technician=current_user.username)
+
+    # Prepare context similar to the preview route
+    parts = [p.strip() for p in (tr.raw_values or '').split(',') if p.strip()]
+    failure_loads = []
+    try:
+        for v in parts[:3]:
+            failure_loads.append(float(v))
+    except Exception:
+        failure_loads = parts
+
+    area = None
+    if len(parts) >= 4:
+        try:
+            area = float(parts[3])
+        except Exception:
+            area = None
+
+    compressive_strengths = []
+    if area and failure_loads:
+        from calculations import compressive_strength_mpa
+        for fl in failure_loads:
+            try:
+                cs = compressive_strength_mpa(float(fl), area)
+                compressive_strengths.append(round(cs, 3))
+            except Exception:
+                compressive_strengths.append('N/A')
+
+    # Generate QR code data URI if qrcode available
+    qr_data_uri = None
+    try:
+        import qrcode
+        import io, base64
+        qr = qrcode.make(f"test:{tr.id};sample:{sample.sample_id if sample else ''}")
+        bio = io.BytesIO()
+        qr.save(bio, format='PNG')
+        qr_b64 = base64.b64encode(bio.getvalue()).decode('ascii')
+        qr_data_uri = f"data:image/png;base64,{qr_b64}"
+    except Exception:
+        qr_data_uri = None
+
+    context = {
+        'sample': sample,
+        'report_date': datetime.utcnow().strftime('%Y-%m-%d'),
+        'report_no': f'RPT-{tr.id}',
+        'ulr_no': getattr(sample, 'sample_id', 'N/A'),
+        'date_of_test': tr.date_tested.strftime('%Y-%m-%d') if tr.date_tested else datetime.utcnow().strftime('%Y-%m-%d'),
+        'num_cubes': 3,
+        'customer_reference': 'Letter No. Nil dated DD-MM-YYYY',
+        'grade': getattr(tr, 'grade', getattr(sample, 'grade', 'M20')),
+        'dimension': getattr(tr, 'dimension', '150 mm x 150 mm x 150 mm'),
+        'cross_section_area': f"{int(area) if area else getattr(tr, 'cross_section_area', '22500')} sq.mm",
+        'failure_loads': failure_loads,
+        'compressive_strengths': compressive_strengths,
+        'test_name': tr.test_name,
+        'test_result': tr.calculated_result,
+        'test_status': tr.status,
+        'technician': current_user.username,
+        'remarks': tr.remarks,
+        'qr_code': qr_data_uri,
+    }
+
+    # Render HTML and try converting with WeasyPrint; fallback to existing ReportLab generator
+    html = render_template('report_cube.html', **context)
+    try:
+        from weasyprint import HTML
+        HTML(string=html, base_url=request.base_url).write_pdf(out_path)
+        used_html_pdf = True
+    except Exception:
+        # Fallback to old PDF generator
+        try:
+            generate_test_report_pdf(out_path, lab_name=lab_name, sample=sample, test_name=tr.test_name,
+                                     raw_values=tr.raw_values, result=tr.calculated_result, technician=current_user.username)
+            used_html_pdf = False
+        except Exception as e:
+            flash(f'Failed to generate report: {e}', 'danger')
+            return redirect(url_for('sample_detail', sample_id=sample.id))
+
     # Save a record
     rpt = models.Report(sample_id=sample.id, test_result_id=tr.id, file_path=out_path, created_at=datetime.utcnow())
     db.session.add(rpt)
     db.session.commit()
-    
+
     # Audit log
-    log_audit('GENERATE_REPORT', 'TestResult', tr.id, f'Generated PDF report for test {tr.test_name}')
-    
+    log_audit('GENERATE_REPORT', 'TestResult', tr.id, f'Generated PDF report for test {tr.test_name} (html_pdf={used_html_pdf})')
+
     flash('Report generated', 'success')
     return send_file(out_path, as_attachment=True)
+
+
+@app.route('/reports/preview/<int:test_id>')
+@login_required
+@role_required('Admin', 'Lab Technician', 'Engineer')
+def preview_report(test_id):
+    """Render an HTML preview of the concrete-cube report using a dedicated template.
+
+    This does not generate a PDF; it lets users preview the formatted report in browser.
+    """
+    tr = models.TestResult.query.get_or_404(test_id)
+    sample = tr.sample
+    # parse raw values (expect comma-separated failure loads and optional area)
+    parts = [p.strip() for p in (tr.raw_values or '').split(',') if p.strip()]
+    failure_loads = []
+    try:
+        for v in parts[:3]:
+            failure_loads.append(float(v))
+    except Exception:
+        failure_loads = parts  # keep raw strings if parse fails
+
+    # compute compressive strengths if area provided (assume last value is area mm2)
+    compressive_strengths = []
+    area = None
+    if len(parts) >= 4:
+        try:
+            area = float(parts[3])
+        except Exception:
+            area = None
+
+    if area and failure_loads:
+        from calculations import compressive_strength_mpa
+        for fl in failure_loads:
+            try:
+                # fl provided in kN
+                cs = compressive_strength_mpa(float(fl), area)
+                compressive_strengths.append(round(cs, 3))
+            except Exception:
+                compressive_strengths.append('N/A')
+
+    context = {
+        'sample': sample,
+        'report_date': datetime.utcnow().strftime('%Y-%m-%d'),
+        'report_no': f'RPT-{tr.id}',
+        'ulr_no': getattr(sample, 'sample_id', 'N/A'),
+        'date_of_test': tr.date_tested.strftime('%Y-%m-%d') if tr.date_tested else datetime.utcnow().strftime('%Y-%m-%d'),
+        'num_cubes': 3,
+        'customer_reference': 'Letter No. Nil dated DD-MM-YYYY',
+        'grade': 'M20',
+        'dimension': '150 mm x 150 mm x 150 mm',
+        'cross_section_area': f"{int(area) if area else '22500'} sq.mm",
+        'failure_loads': failure_loads,
+        'compressive_strengths': compressive_strengths,
+        'qr_code': None,
+    }
+
+    return render_template('report_cube.html', **context)
 
 @app.route('/reports/batch', methods=['POST'])
 @login_required
@@ -857,4 +989,5 @@ if __name__ == '__main__':
     
     # Use environment variables for debug mode
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 'yes')
-    app.run(debug=debug_mode)
+    # Bind to 0.0.0.0 to accept connections from any IP address
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)

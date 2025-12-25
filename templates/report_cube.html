@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Test Report - {{ sample.sample_id if sample else 'N/A' }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; color:#000 }
+        .header-div { width:100%; }
+        .header-logo { height:60px }
+        .sub-page { margin-top: 12px }
+        table { border-collapse: collapse }
+        td, th { padding: 4px }
+    </style>
+</head>
+<body>
+<div class="header-div">
+<div class="header-img-div">
+<table border="0" cellpadding="1" cellspacing="0" style="width:100%">
+    <tbody>
+        <tr>
+            <td><img alt="Logo" class="header-logo" src="{{ url_for('static', filename='images/header.gif') }}" /></td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<table border="0" cellpadding="1" cellspacing="0" style="width:100%">
+    <tbody>
+        <tr>
+            <td style="width:80%">Ref: CTPL-CBE/Cube/25</td>
+            <td style="width:20%">
+            <div class="order_date" id="orderdate">Date: {{ report_date }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td style="width:80%">
+            <div class="order_no">Report No: {{ report_no }}</div>
+            </td>
+            <td style="width:20%">
+            <div class="page_no">Page 1</div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<table border="0" cellpadding="1" cellspacing="0" style="width:100%">
+    <tbody>
+        <tr>
+            <td style="width:80%"><strong>CUSTOMER DETAILS</strong></td>
+            <td style="width:20%">&nbsp;</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="sub-page">
+<h6 style="text-align:center"><strong><span style="font-size:14pt">TEST REPORT ON CONCRETE CUBES </span></strong></h6>
+<p style="text-align:center"><strong>Test: {{ test_name }}</strong> | <strong>Result: {{ test_result }}</strong> | <strong>Status: {{ test_status }}</strong></p>
+
+<table border="0" cellpadding="1" cellspacing="0" style="width:100%">
+    <tbody>
+        <tr>
+            <td style="width:40%">Source of sample</td>
+            <td style="width:1%">:</td>
+            <td style="width:59%">Sample supplied by the customer</td>
+        </tr>
+        <tr>
+            <td>Sample ID</td>
+            <td>:</td>
+            <td>{{ sample.sample_id if sample else 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td>Client</td>
+            <td>:</td>
+            <td>{{ sample.client_name if sample else '' }}</td>
+        </tr>
+        <tr>
+            <td>ULR No.</td>
+            <td>:</td>
+            <td>
+            <div id="ulrno">{{ ulr_no }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td>Date of Test &amp; Period of Test</td>
+            <td>:</td>
+            <td>{{ date_of_test }}</td>
+        </tr>
+        <tr>
+            <td>No. of cubes tested</td>
+            <td>:</td>
+            <td>{{ num_cubes }}</td>
+        </tr>
+        <tr>
+            <td>Customer&rsquo;s reference</td>
+            <td>:</td>
+            <td>{{ customer_reference }}</td>
+        </tr>
+        <tr>
+            <td>Project*</td>
+            <td>:</td>
+            <td>
+            <div class="project-div"><strong>{{ sample.project.project_name if sample and sample.project else (sample.project_name if sample else 'NA') }}</strong></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Grade of concrete*</td>
+            <td>:</td>
+            <td><strong>{{ grade }}</strong></td>
+        </tr>
+        <tr>
+            <td>Dimension of Specimen</td>
+            <td>:</td>
+            <td>{{ dimension }}</td>
+        </tr>
+        <tr>
+            <td>Cross Sectional Area</td>
+            <td>:</td>
+            <td>{{ cross_section_area }}</td>
+        </tr>
+        <tr>
+            <td>Tested By</td>
+            <td>:</td>
+            <td>{{ technician }}</td>
+        </tr>
+        <tr>
+            <td>Remarks</td>
+            <td>:</td>
+            <td>{{ remarks or '' }}</td>
+        </tr>
+        <tr>
+            <td>Technical Reference</td>
+            <td>:</td>
+            <td>IS:516-1959 (Reaffirmed 2008)</td>
+        </tr>
+    </tbody>
+</table>
+
+<table border="1" cellpadding="5" cellspacing="1" style="text-align:center; width:100%">
+    <tbody>
+        <tr>
+            <td><strong>Sl. No</strong></td>
+            <td><strong>Identification Mark on Specimen*</strong></td>
+            <td><strong>Date of Casting*</strong></td>
+            <td><strong>Date of Testing</strong></td>
+            <td><strong>Age at test (days)</strong></td>
+            <td><strong>Mass (kg)</strong></td>
+            <td><strong>Failure Load (kN)</strong></td>
+            <td><strong>Compressive Strength (N/mm<sup>2</sup>)</strong></td>
+        </tr>
+        {% for i in range(3) %}
+        <tr>
+            <td>{{ i+1 }}</td>
+            <td>N/A</td>
+            <td>N/A</td>
+            <td>{{ date_of_test }}</td>
+            <td>N/A</td>
+            <td>N/A</td>
+            <td>{{ failure_loads[i] if failure_loads|length > i else 'N/A' }}</td>
+            <td>{{ compressive_strengths[i] if compressive_strengths|length > i else 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p>* As furnished by the customer.&nbsp;&nbsp;<strong>Minimum Required Compressive Strength (N/mm<sup>2</sup>)For 7 Days (60%) - 24.00, 14 Days (85%)- 34.00 &amp; 28 Days (&gt;100%) More than 40.00</strong></p>
+
+<table style="width:60%">
+    <tbody>
+        <tr>
+            <td style="width:70%">
+            <p><strong>for CIVIL TECHNO LAB P Ltd</strong></p>
+
+            <p><img alt="" src="{{ url_for('static', filename='images/si.png') }}" style="height:42px; width:220px" /></p>
+
+            <p><strong>S. CHANDRASEKAR, M.E., (STRU)<br />TECHNICAL DIRECTOR</strong></p>
+            </td>
+            <td style="width:30%">
+            <div class="qrcode-div">{{ qr_code or 'Qr Code' }}</div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+</body>
+</html>
